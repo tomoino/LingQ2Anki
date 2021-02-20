@@ -1,0 +1,2 @@
+# LingQ2Anki
+LingQの単語リストをAnki用に変換するアプリ
