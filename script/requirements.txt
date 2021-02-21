@@ -1,0 +1,5 @@
+requests
+pyinstaller
+python-dotenv
+google-cloud-texttospeech
+google-cloud-core
