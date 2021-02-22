@@ -1,1 +1,1 @@
-pyinstaller lingq_zh.py --onefile --noconsole --windowed
+pyinstaller lingq_zh.py --onefile --noconsole --additional-hooks-dir=./hooks/

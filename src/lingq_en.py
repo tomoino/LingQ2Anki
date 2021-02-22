@@ -45,9 +45,6 @@ def main():
         audio_encoding=texttospeech.AudioEncoding.MP3
     )
 
-    # text = "test"
-    # tts(client, text, voice, audio_config)
-
     r = requests.get(API_URL, headers=API_HEADER).json()
     results = r["results"]
 
