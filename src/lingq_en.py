@@ -15,11 +15,10 @@ API_URL = 'https://www.lingq.com/api/v2/en/cards/'
 API_HEADER = {'Authorization':f'token {TOKEN}'}
 
 CREDENTIAL_PATH = os.environ.get("TTS_CREDENTIAL_PATH")
-AUDIO_DIR_NAME = os.environ.get("AUDIO_DIR_NAME_EN")
-AUDIO_DIR_PATH = os.environ.get("AUDIO_DIR_PATH_EN")
+ANKI_AUDIO_DIR = os.environ.get("ANKI_AUDIO_DIR")
 
 def tts(client, text, filename, voice, audio_config):    
-    audio_path = join(dirname(__file__), filename)
+    audio_path = join(ANKI_AUDIO_DIR, filename)
     if os.path.exists(audio_path):
         print(f"{filename} exists")
         return
@@ -28,7 +27,7 @@ def tts(client, text, filename, voice, audio_config):
     
     response = client.synthesize_speech(request={"input": input_text, "voice": voice, "audio_config": audio_config})
 
-    with open(filename, 'wb') as out:
+    with open(audio_path, 'wb') as out:
         out.write(response.audio_content)
         print(f'Audio content written to file {filename}')
 
@@ -54,13 +53,12 @@ def main():
         word = result["hints"][0]
         text = ' '.join(result["words"])
         replaced_text = text.replace('.', '')
-        filename = f'{AUDIO_DIR_NAME}/{replaced_text}.mp3'
-        audio_path = f'{AUDIO_DIR_PATH}{replaced_text}.mp3'
+        filename = f'lingq_en_{replaced_text}.mp3'
 
         tts(client, text, filename, voice, audio_config)
-        words.append([word["id"], text, word["text"], result["fragment"], f"[sound:{audio_path}]"]) # id, english, japanese, phrase, audio
+        words.append([word["id"], text, word["text"], result["fragment"], f"[sound:{filename}]"]) # id, english, japanese, phrase, audio
 
-    with open('LingQ en.csv', 'w') as f:
+    with open('../csv/LingQ en.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(words)
 
