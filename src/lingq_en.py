@@ -6,12 +6,18 @@ from dotenv import load_dotenv
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 
+# 言語ごとの設定変数
+LANGUAGE_CODE = "en"
+TTS_LANGUAGE_CODE = "en-US"
+TTS_NAME = "en-US-Wavenet-D"
+TTS_SSML_GENDER = texttospeech.SsmlVoiceGender.MALE
+
 load_dotenv(verbose=True)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 TOKEN = os.environ.get("LingQ_API_KEY")
-API_URL = 'https://www.lingq.com/api/v2/en/cards/'
+API_URL = f'https://www.lingq.com/api/v2/{LANGUAGE_CODE}/cards/'
 API_HEADER = {'Authorization':f'token {TOKEN}'}
 
 CREDENTIAL_PATH = os.environ.get("TTS_CREDENTIAL_PATH")
@@ -36,9 +42,9 @@ def main():
     credentials = service_account.Credentials.from_service_account_file(CREDENTIAL_PATH)
     client = texttospeech.TextToSpeechClient(credentials=credentials)
     voice = texttospeech.VoiceSelectionParams(
-        language_code="en-US",
-        name="en-US-Wavenet-D",
-        ssml_gender=texttospeech.SsmlVoiceGender.MALE,
+        language_code=TTS_LANGUAGE_CODE,
+        name=TTS_NAME,
+        ssml_gender=TTS_SSML_GENDER ,
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3
@@ -53,12 +59,13 @@ def main():
         word = result["hints"][0]
         text = ' '.join(result["words"])
         replaced_text = text.replace('.', '')
-        filename = f'lingq_en_{replaced_text}.mp3'
+        filename = f'lingq_{LANGUAGE_CODE}_{replaced_text}.mp3'
 
         tts(client, text, filename, voice, audio_config)
-        words.append([word["id"], text, word["text"], result["fragment"], f"[sound:{filename}]"]) # id, english, japanese, phrase, audio
+        # 言語ごとの設定 id, term, japanese, phrase, audio
+        words.append([word["id"], text, word["text"], result["fragment"], f"[sound:{filename}]"]) 
 
-    with open('../csv/LingQ en.csv', 'w') as f:
+    with open(f'../csv/LingQ {LANGUAGE_CODE}.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(words)
 

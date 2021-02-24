@@ -6,20 +6,25 @@ from dotenv import load_dotenv
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 
+# 言語ごとの設定変数
+LANGUAGE_CODE = "zh"
+TTS_LANGUAGE_CODE = "cmn-CN"
+TTS_NAME = "cmn-CN-Wavenet-C"
+TTS_SSML_GENDER = texttospeech.SsmlVoiceGender.MALE
+
 load_dotenv(verbose=True)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 TOKEN = os.environ.get("LingQ_API_KEY")
-API_URL = 'https://www.lingq.com/api/v2/zh/cards/'
+API_URL = f'https://www.lingq.com/api/v2/{LANGUAGE_CODE}/cards/'
 API_HEADER = {'Authorization':f'token {TOKEN}'}
 
 CREDENTIAL_PATH = os.environ.get("TTS_CREDENTIAL_PATH")
-AUDIO_DIR_NAME = os.environ.get("AUDIO_DIR_NAME_ZH")
-AUDIO_DIR_PATH = os.environ.get("AUDIO_DIR_PATH_ZH")
+ANKI_AUDIO_DIR = os.environ.get("ANKI_AUDIO_DIR")
 
 def tts(client, text, filename, voice, audio_config):    
-    audio_path = join(dirname(__file__), filename)
+    audio_path = join(ANKI_AUDIO_DIR, filename)
     if os.path.exists(audio_path):
         print(f"{filename} exists")
         return
@@ -28,7 +33,7 @@ def tts(client, text, filename, voice, audio_config):
     
     response = client.synthesize_speech(request={"input": input_text, "voice": voice, "audio_config": audio_config})
 
-    with open(filename, 'wb') as out:
+    with open(audio_path, 'wb') as out:
         out.write(response.audio_content)
         print(f'Audio content written to file {filename}')
 
@@ -37,9 +42,9 @@ def main():
     credentials = service_account.Credentials.from_service_account_file(CREDENTIAL_PATH)
     client = texttospeech.TextToSpeechClient(credentials=credentials)
     voice = texttospeech.VoiceSelectionParams(
-        language_code="cmn-CN",
-        name="cmn-CN-Wavenet-C",
-        ssml_gender=texttospeech.SsmlVoiceGender.MALE,
+        language_code=TTS_LANGUAGE_CODE,
+        name=TTS_NAME,
+        ssml_gender=TTS_SSML_GENDER ,
     )
     audio_config = texttospeech.AudioConfig(
         audio_encoding=texttospeech.AudioEncoding.MP3
@@ -54,14 +59,14 @@ def main():
         word = result["hints"][0]
         text = word["term"]
         replaced_text = text.replace('.', '')
-        filename = f'{AUDIO_DIR_NAME}/{replaced_text}.mp3'
-        audio_path = f'{AUDIO_DIR_PATH}{replaced_text}.mp3'
+        filename = f'lingq_{LANGUAGE_CODE}_{replaced_text}.mp3'
 
         tts(client, text, filename, voice, audio_config)
+        # 言語ごとの設定　id, term, pinyin, japanese, phrase, audio
         pinyin = " ".join(result["transliteration"])
-        words.append([word["id"], text, pinyin, word["text"], result["fragment"], f"[sound:{audio_path}]"]) # id, chinese, pinyin, japanese, phrase, audio
+        words.append([word["id"], text, pinyin, word["text"], result["fragment"], f"[sound:{filename}]"])
 
-    with open('LingQ zh.csv', 'w') as f:
+    with open(f'../csv/LingQ {LANGUAGE_CODE}.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(words)
 
