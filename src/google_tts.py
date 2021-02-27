@@ -7,10 +7,16 @@ class TTS:
     def __init__(self, cfg: Dict):
         _credentials = service_account.Credentials.from_service_account_file(cfg.credential_path)
         self.client = texttospeech.TextToSpeechClient(credentials=_credentials)
+
+        if cfg.gender == "male":
+            _gender = texttospeech.SsmlVoiceGender.MALE
+        else:
+            _gender = texttospeech.SsmlVoiceGender.FEMALE
+
         self.voice = texttospeech.VoiceSelectionParams(
             language_code=cfg.language_code,
             name=cfg.name,
-            ssml_gender=cfg.gender ,
+            ssml_gender=_gender ,
         )
         self.audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3
